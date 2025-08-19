@@ -18,28 +18,32 @@ void displayFile(const char *filename) {
 void passTwo() {
     char label[10], opcode[10], operand[10], code[10], mnemonic[3];
     int loc;
-    FILE *fp1, *fp2, *fp3, *fp4;
+    int programLength = 0;
+    FILE *fp1, *fp2, *fp3, *fp4, *fpLen;
 
     fp1 = fopen("intermediate.txt", "r");
     fp2 = fopen("optab.txt", "r");
     fp3 = fopen("symtab.txt", "r");
     fp4 = fopen("output.txt", "w");
+    fpLen = fopen("length.txt", "r");
 
-    if (!fp1 || !fp2 || !fp3 || !fp4) {
+    if (!fp1 || !fp2 || !fp3 || !fp4 || !fpLen) {
         printf("Error opening files\n");
         return;
     }
+
+    fscanf(fpLen, "%X", &programLength);
+    fclose(fpLen);
 
     char temp[50];
     fgets(temp, sizeof(temp), fp1);
     sscanf(temp, "%s %s %s", label, opcode, operand);
 
     if (strcmp(opcode, "START") == 0) {
-        fprintf(fp4, "H^%s^%06X^\n", label, (int)strtol(operand, NULL, 16));
+        fprintf(fp4, "H^%s^%06X^%06X\n", label, (int)strtol(operand, NULL, 16), programLength);
     }
 
     fscanf(fp1, "%X %s %s %s", &loc, label, opcode, operand);
-
     fprintf(fp4, "T^%06X^", loc);
 
     int first = 1;
@@ -112,7 +116,7 @@ void passTwo() {
         fscanf(fp1, "%X %s %s %s", &loc, label, opcode, operand);
     }
 
-    fprintf(fp4, "\nE^%06X\n", loc);
+    fprintf(fp4, "\nE^%06X\n", (int)strtol(operand, NULL, 16));  // Usually the operand in END line is the start address
 
     fclose(fp1);
     fclose(fp2);
@@ -124,8 +128,8 @@ void passTwo() {
     displayFile("output.txt");
 }
 
+
 int main() {
     passTwo();
     return 0;
 }
-
